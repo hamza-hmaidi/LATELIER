@@ -14,74 +14,74 @@ import {
 
 export class CountryDto {
   @IsUrl()
-  picture: string;
+  picture!: string;
 
   @IsString()
   @IsNotEmpty()
-  code: string;
+  code!: string;
 }
 
 export class PlayerDataDto {
   @Type(() => Number)
   @IsInt()
   @IsPositive()
-  rank: number;
+  rank!: number;
 
   @Type(() => Number)
   @IsInt()
   @Min(0)
-  points: number;
+  points!: number;
 
   @Type(() => Number)
   @IsInt()
   @IsPositive()
-  weight: number;
+  weight!: number;
 
   @Type(() => Number)
   @IsInt()
   @IsPositive()
-  height: number;
+  height!: number;
 
   @Type(() => Number)
   @IsInt()
   @IsPositive()
-  age: number;
+  age!: number;
 
   @IsArray()
   @ArrayNotEmpty()
   @Type(() => Number)
   @IsIn([0, 1], { each: true })
-  last: number[];
+  last!: number[];
 }
 
 export class CreatePlayerDto {
   @Type(() => Number)
   @IsInt()
-  id: number;
+  id!: number;
 
   @IsString()
   @IsNotEmpty()
-  firstname: string;
+  firstname!: string;
 
   @IsString()
   @IsNotEmpty()
-  lastname: string;
+  lastname!: string;
 
   @IsString()
   @IsNotEmpty()
-  shortname: string;
+  shortname!: string;
 
   @IsIn(['M', 'F'])
-  sex: 'M' | 'F';
+  sex!: 'M' | 'F';
 
   @ValidateNested()
   @Type(() => CountryDto)
-  country: CountryDto;
+  country!: CountryDto;
 
   @IsUrl()
-  picture: string;
+  picture!: string;
 
   @ValidateNested()
   @Type(() => PlayerDataDto)
-  data: PlayerDataDto;
+  data!: PlayerDataDto;
 }

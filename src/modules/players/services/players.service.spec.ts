@@ -1,11 +1,13 @@
 import { PlayersService } from './players.service';
-import { Player } from './players.types';
+import { Player } from '../types/players.types';
+import { BmiService } from '../stats/bmi.service';
+import { HeightService } from '../stats/height.service';
 
 describe('PlayersService', () => {
   let service: PlayersService;
 
   beforeEach(() => {
-    service = new PlayersService();
+    service = new PlayersService(new BmiService(), new HeightService());
   });
 
   it('sorts players from best to worst', () => {

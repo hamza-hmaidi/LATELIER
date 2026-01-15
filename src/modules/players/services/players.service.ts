@@ -1,7 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import playersData from '../data/players.json';
-import { CreatePlayerDto } from './players.dto';
-import { Player, PlayersStats } from './players.types';
+import { CreatePlayerDto } from '../models/dto/player.dto';
+import { Player, PlayersStats } from '../types/players.types';
+import { BmiService } from '../stats/bmi.service';
+import { HeightService } from '../stats/height.service';
 
 type PlayersJson = {
   players: Player[];
@@ -11,7 +13,10 @@ type PlayersJson = {
 export class PlayersService {
   private readonly players: Player[];
 
-  constructor() {
+  constructor(
+    private readonly bmiService: BmiService,
+    private readonly heightService: HeightService
+  ) {
     const initial = (playersData as PlayersJson).players || [];
     this.players = initial.map((player) => this.clonePlayer(player));
   }
@@ -40,8 +45,6 @@ export class PlayersService {
     }
 
     const countryStats = new Map<string, { wins: number; matches: number }>();
-    const bmiValues: number[] = [];
-    const heights: number[] = [];
 
     for (const player of this.players) {
       const wins = player.data.last.reduce(
@@ -55,13 +58,6 @@ export class PlayersService {
       current.matches += matches;
       countryStats.set(player.country.code, current);
 
-      const heightMeters = player.data.height / 100;
-      const weightKg = player.data.weight / 1000;
-      if (heightMeters > 0 && weightKg > 0) {
-        bmiValues.push(weightKg / (heightMeters * heightMeters));
-      }
-
-      heights.push(player.data.height);
     }
 
     let topCountryCode = '';
@@ -74,17 +70,8 @@ export class PlayersService {
       }
     }
 
-    const averageBmi =
-      bmiValues.length === 0
-        ? 0
-        : bmiValues.reduce((sum, value) => sum + value, 0) / bmiValues.length;
-
-    const sortedHeights = [...heights].sort((a, b) => a - b);
-    const mid = Math.floor(sortedHeights.length / 2);
-    const medianHeight =
-      sortedHeights.length % 2 === 1
-        ? sortedHeights[mid]
-        : (sortedHeights[mid - 1] + sortedHeights[mid]) / 2;
+    const averageBmi = this.bmiService.calculateAverage(this.players);
+    const medianHeight = this.heightService.calculateMedian(this.players);
 
     return {
       topCountryByWinRatio: {
