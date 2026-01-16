@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { PlayersController } from './controllers/players.controller';
-import { PlayersService } from './services/players.service';
-import { BmiService } from './stats/bmi.service';
-import { HeightService } from './stats/height.service';
+import { PlayersController } from './players.controller';
+import { PlayersService } from './players.service';
+import { BmiService } from './metric/bmi.service';
+import { HeightService } from './metric/height.service';
 
 @Module({
   controllers: [PlayersController],

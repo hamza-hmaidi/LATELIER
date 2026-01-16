@@ -1,7 +1,7 @@
-import { PlayersService } from './players.service';
-import { Player } from '../types/players.types';
-import { BmiService } from '../stats/bmi.service';
-import { HeightService } from '../stats/height.service';
+import { BmiService } from "./metric/bmi.service";
+import { HeightService } from "./metric/height.service";
+import { PlayersService } from "./players.service";
+
 
 describe('PlayersService', () => {
   let service: PlayersService;

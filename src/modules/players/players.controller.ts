@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
-import { PlayersService } from '../services/players.service';
-import { CreatePlayerDto } from '../models/dto/player.dto';
-import { Player, PlayersStats } from '../types/players.types';
+import { PlayersService } from './players.service';
+import { Player, PlayersStats } from './types/players.types';
+import { CreatePlayerDto } from './models/dto/player.dto';
 
 @Controller('players')
 export class PlayersController {

@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import playersData from '../data/players.json';
-import { CreatePlayerDto } from '../models/dto/player.dto';
-import { Player, PlayersStats } from '../types/players.types';
-import { BmiService } from '../stats/bmi.service';
-import { HeightService } from '../stats/height.service';
+import playersData from '@data/players.json';
+import { CreatePlayerDto } from './models/dto/player.dto';
+import { Player, PlayersStats } from './types/players.types';
+import { BmiService } from './metric/bmi.service';
+import { HeightService } from './metric/height.service';
 
 type PlayersJson = {
   players: Player[];

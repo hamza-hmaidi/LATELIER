@@ -6,6 +6,10 @@
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
+    "baseUrl": ".",
+    "paths": {
+      "@data/*": ["data/*"]
+    },
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "strict": true,
