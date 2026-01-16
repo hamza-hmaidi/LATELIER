@@ -1,13 +1,19 @@
-import { BmiService } from "./metric/bmi.service";
-import { HeightService } from "./metric/height.service";
-import { PlayersService } from "./players.service";
-
+import { ErrorHandlerService } from '../../common/errors/error-handler.service';
+import { RequestContextService } from '../../common/request-context/request-context.service';
+import { BmiService } from './metric/bmi.service';
+import { HeightService } from './metric/height.service';
+import { PlayersService } from './players.service';
+import { Player } from './types/players.types';
 
 describe('PlayersService', () => {
   let service: PlayersService;
 
   beforeEach(() => {
-    service = new PlayersService(new BmiService(), new HeightService());
+    service = new PlayersService(
+      new BmiService(),
+      new HeightService(),
+      new ErrorHandlerService(new RequestContextService())
+    );
   });
 
   it('sorts players from best to worst', () => {

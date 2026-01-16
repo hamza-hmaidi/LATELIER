@@ -4,6 +4,7 @@ import { CreatePlayerDto } from './models/dto/player.dto';
 import { Player, PlayersStats } from './types/players.types';
 import { BmiService } from './metric/bmi.service';
 import { HeightService } from './metric/height.service';
+import { ErrorHandlerService } from '@common/errors/error-handler.service';
 
 type PlayersJson = {
   players: Player[];
@@ -15,82 +16,98 @@ export class PlayersService {
 
   constructor(
     private readonly bmiService: BmiService,
-    private readonly heightService: HeightService
+    private readonly heightService: HeightService,
+    private readonly errorHandler: ErrorHandlerService
   ) {
     const initial = (playersData as PlayersJson).players || [];
     this.players = initial.map((player) => this.clonePlayer(player));
   }
 
   listSorted(): Player[] {
-    return [...this.players]
-      .sort((a, b) => a.data.rank - b.data.rank)
-      .map((player) => this.clonePlayer(player));
+    try {
+      return [...this.players]
+        .sort((a, b) => a.data.rank - b.data.rank)
+        .map((player) => this.clonePlayer(player));
+    } catch (error) {
+      this.errorHandler.handle(error, { action: 'list players' });
+    }
   }
 
   findById(id: number): Player {
-    const player = this.players.find((item) => item.id === id);
-    if (!player) {
-      throw new NotFoundException(`Player with id ${id} not found`);
+    try {
+      const player = this.players.find((item) => item.id === id);
+      if (!player) {
+        throw new NotFoundException(`Player with id ${id} not found`);
+      }
+      return this.clonePlayer(player);
+    } catch (error) {
+      this.errorHandler.handle(error, { action: 'find player', metadata: { id } });
     }
-    return this.clonePlayer(player);
   }
 
   getStatistics(): PlayersStats {
-    if (this.players.length === 0) {
-      return {
-        topCountryByWinRatio: { code: '', ratio: 0 },
-        averageBmi: 0,
-        medianHeight: 0
-      };
-    }
-
-    const countryStats = new Map<string, { wins: number; matches: number }>();
-
-    for (const player of this.players) {
-      const wins = player.data.last.reduce(
-        (sum, value) => sum + (value === 1 ? 1 : 0),
-        0
-      );
-      const matches = player.data.last.length;
-
-      const current = countryStats.get(player.country.code) || { wins: 0, matches: 0 };
-      current.wins += wins;
-      current.matches += matches;
-      countryStats.set(player.country.code, current);
-
-    }
-
-    let topCountryCode = '';
-    let topRatio = -1;
-    for (const [code, stats] of countryStats.entries()) {
-      const ratio = stats.matches === 0 ? 0 : stats.wins / stats.matches;
-      if (ratio > topRatio) {
-        topRatio = ratio;
-        topCountryCode = code;
+    try {
+      if (this.players.length === 0) {
+        return {
+          topCountryByWinRatio: { code: '', ratio: 0 },
+          averageBmi: 0,
+          medianHeight: 0
+        };
       }
+
+      const countryStats = new Map<string, { wins: number; matches: number }>();
+
+      for (const player of this.players) {
+        const wins = player.data.last.reduce(
+          (sum, value) => sum + (value === 1 ? 1 : 0),
+          0
+        );
+        const matches = player.data.last.length;
+
+        const current = countryStats.get(player.country.code) || { wins: 0, matches: 0 };
+        current.wins += wins;
+        current.matches += matches;
+        countryStats.set(player.country.code, current);
+      }
+
+      let topCountryCode = '';
+      let topRatio = -1;
+      for (const [code, stats] of countryStats.entries()) {
+        const ratio = stats.matches === 0 ? 0 : stats.wins / stats.matches;
+        if (ratio > topRatio) {
+          topRatio = ratio;
+          topCountryCode = code;
+        }
+      }
+
+      const averageBmi = this.bmiService.calculateAverage(this.players);
+      const medianHeight = this.heightService.calculateMedian(this.players);
+
+      return {
+        topCountryByWinRatio: {
+          code: topCountryCode,
+          ratio: this.round(topRatio, 3)
+        },
+        averageBmi: this.round(averageBmi, 2),
+        medianHeight
+      };
+    } catch (error) {
+      this.errorHandler.handle(error, { action: 'compute statistics' });
     }
-
-    const averageBmi = this.bmiService.calculateAverage(this.players);
-    const medianHeight = this.heightService.calculateMedian(this.players);
-
-    return {
-      topCountryByWinRatio: {
-        code: topCountryCode,
-        ratio: this.round(topRatio, 3)
-      },
-      averageBmi: this.round(averageBmi, 2),
-      medianHeight
-    };
   }
 
   addPlayer(input: CreatePlayerDto): Player {
-    if (this.players.some((player) => player.id === input.id)) {
-      throw new BadRequestException('Player id already exists');
-    }
+    try {
+      if (this.players.some((player) => player.id === input.id)) {
+        throw new BadRequestException('Player id already exists');
+      }
 
-    const newPlayer = this.clonePlayer(input as Player);
-    this.players.push(newPlayer);
-    return this.clonePlayer(newPlayer);
+      const newPlayer = this.clonePlayer(input as Player);
+      this.players.push(newPlayer);
+      return this.clonePlayer(newPlayer);
+    } catch (error) {
+      this.errorHandler.handle(error, { action: 'add player', metadata: { id: input.id } });
+    }
   }
 
   private clonePlayer(player: Player): Player {

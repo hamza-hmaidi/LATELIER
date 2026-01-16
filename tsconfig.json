@@ -8,7 +8,8 @@
     "rootDir": "./src",
     "baseUrl": ".",
     "paths": {
-      "@data/*": ["data/*"]
+      "@data/*": ["data/*"],
+      "@common/*": ["src/common/*"]
     },
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
