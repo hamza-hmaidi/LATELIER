@@ -1,0 +1,63 @@
+name: CD - Build, Push to ECR, Deploy to EC2
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  id-token: write   # required for OIDC with AWS :contentReference[oaicite:7]{index=7}
+  contents: read
+
+env:
+  AWS_REGION: eu-west-3
+  ECR_REPOSITORY: laterlier
+  CONTAINER_NAME: latelier
+  EC2_INSTANCE_ID: i-004b03e1540f303d3
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 1) Get short-lived AWS credentials via GitHub OIDC
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/GitHubActionsDeployRole
+          aws-region: ${{ env.AWS_REGION }}
+      # This is the recommended action + OIDC flow :contentReference[oaicite:8]{index=8}
+
+      # 2) Login to ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        run: |
+          aws ecr get-login-password --region "${AWS_REGION}" \
+            | docker login --username AWS --password-stdin "612622081166.dkr.ecr.eu-west-3.amazonaws.com"
+      # ECR auth via get-login-password :contentReference[oaicite:9]{index=9}
+
+      # 3) Build + tag + push
+      - name: Build, tag, and push image to ECR
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          ECR_REGISTRY="612622081166.dkr.ecr.eu-west-3.amazonaws.com"
+          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+
+          docker build -t "${IMAGE_URI}" .
+          docker push "${IMAGE_URI}"
+      # Push flow is standard Docker push to ECR :contentReference[oaicite:10]{index=10}
+
+      # 4) Deploy on EC2 via SSM Run Command (no SSH keys)
+      - name: Deploy on EC2 (SSM Run Command)
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          aws ssm send-command \
+            --instance-ids "${EC2_INSTANCE_ID}" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy ${ECR_REPOSITORY}:${IMAGE_TAG}" \
+            --parameters commands="sudo /opt/app/deploy.sh ${IMAGE_TAG}"
+      # Run Command via AWS CLI :contentReference[oaicite:11]{index=11}
