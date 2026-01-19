@@ -7,7 +7,7 @@ import { RequestContextService } from '@common/request-context/request-context.s
 export class RequestIdMiddleware implements NestMiddleware {
   constructor(private readonly requestContext: RequestContextService) {}
 
-  use(request: Request, response: Response, next: NextFunction): void {
+  use(request: any, response: Response, next: NextFunction): void {
     const incoming = request.header('x-request-id');
     const trimmed = typeof incoming === 'string' ? incoming.trim() : '';
     const requestId = trimmed && trimmed.length <= 128 ? trimmed : randomUUID();

@@ -1,7 +1,7 @@
-// import 'express-serve-static-core';
+import 'express-serve-static-core';
 
-// declare module 'express-serve-static-core' {
-//   interface Request {
-//     requestId?: string;
-//   }
-// }
+declare module 'express-serve-static-core' {
+  interface Request {
+    requestId?: string;
+  }
+}
