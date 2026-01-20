@@ -1,13 +1,13 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { Request, Response, NextFunction } from 'express';
-import { RequestContextService } from '@common/request-context/request-context.service';
+import { RequestContextService } from '../request-context/request-context.service';
 
 @Injectable()
 export class RequestIdMiddleware implements NestMiddleware {
   constructor(private readonly requestContext: RequestContextService) {}
 
-  use(request: any, response: Response, next: NextFunction): void {
+  use(request: Request, response: Response, next: NextFunction): void {
     const incoming = request.header('x-request-id');
     const trimmed = typeof incoming === 'string' ? incoming.trim() : '';
     const requestId = trimmed && trimmed.length <= 128 ? trimmed : randomUUID();

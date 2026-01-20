@@ -3,6 +3,7 @@ import { RequestContextService } from '../../common/request-context/request-cont
 import { BmiService } from './metric/bmi.service';
 import { HeightService } from './metric/height.service';
 import { PlayersService } from './players.service';
+import { InMemoryPlayersRepository } from './repositories/in-memory-players.repository';
 import { Player } from './types/players.types';
 
 describe('PlayersService', () => {
@@ -12,6 +13,7 @@ describe('PlayersService', () => {
     service = new PlayersService(
       new BmiService(),
       new HeightService(),
+      new InMemoryPlayersRepository(),
       new ErrorHandlerService(new RequestContextService())
     );
   });

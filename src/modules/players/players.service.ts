@@ -1,33 +1,25 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import playersData from '@data/players.json';
+import { ErrorHandlerService } from '../../common/errors/error-handler.service';
 import { CreatePlayerDto } from './models/dto/player.dto';
-import { Player, PlayersStats } from './types/players.types';
 import { BmiService } from './metric/bmi.service';
 import { HeightService } from './metric/height.service';
-import { ErrorHandlerService } from '@common/errors/error-handler.service';
-
-type PlayersJson = {
-  players: Player[];
-};
+import { PlayersRepository } from './repositories/players.repository';
+import { Player, PlayersStats } from './types/players.types';
 
 @Injectable()
 export class PlayersService {
-  private readonly players: Player[];
-
   constructor(
     private readonly bmiService: BmiService,
     private readonly heightService: HeightService,
+    private readonly playersRepository: PlayersRepository,
     private readonly errorHandler: ErrorHandlerService
   ) {
-    const initial = (playersData as PlayersJson).players || [];
-    this.players = initial.map((player) => this.clonePlayer(player));
   }
 
   listSorted(): Player[] {
     try {
-      return [...this.players]
-        .sort((a, b) => a.data.rank - b.data.rank)
-        .map((player) => this.clonePlayer(player));
+      const players = this.playersRepository.list();
+      return players.sort((a, b) => a.data.rank - b.data.rank);
     } catch (error) {
       this.errorHandler.handle(error, { action: 'list players' });
     }
@@ -35,11 +27,11 @@ export class PlayersService {
 
   findById(id: number): Player {
     try {
-      const player = this.players.find((item) => item.id === id);
+      const player = this.playersRepository.findById(id);
       if (!player) {
         throw new NotFoundException(`Player with id ${id} not found`);
       }
-      return this.clonePlayer(player);
+      return player;
     } catch (error) {
       this.errorHandler.handle(error, { action: 'find player', metadata: { id } });
     }
@@ -47,7 +39,8 @@ export class PlayersService {
 
   getStatistics(): PlayersStats {
     try {
-      if (this.players.length === 0) {
+      const players = this.playersRepository.list();
+      if (players.length === 0) {
         return {
           topCountryByWinRatio: { code: '', ratio: 0 },
           averageBmi: 0,
@@ -57,7 +50,7 @@ export class PlayersService {
 
       const countryStats = new Map<string, { wins: number; matches: number }>();
 
-      for (const player of this.players) {
+      for (const player of players) {
         const wins = player.data.last.reduce(
           (sum, value) => sum + (value === 1 ? 1 : 0),
           0
@@ -80,8 +73,8 @@ export class PlayersService {
         }
       }
 
-      const averageBmi = this.bmiService.calculateAverage(this.players);
-      const medianHeight = this.heightService.calculateMedian(this.players);
+      const averageBmi = this.bmiService.calculateAverage(players);
+      const medianHeight = this.heightService.calculateMedian(players);
 
       return {
         topCountryByWinRatio: {
@@ -98,24 +91,14 @@ export class PlayersService {
 
   addPlayer(input: CreatePlayerDto): Player {
     try {
-      if (this.players.some((player) => player.id === input.id)) {
+      if (this.playersRepository.findById(input.id)) {
         throw new BadRequestException('Player id already exists');
       }
 
-      const newPlayer = this.clonePlayer(input as Player);
-      this.players.push(newPlayer);
-      return this.clonePlayer(newPlayer);
+      return this.playersRepository.add(input as Player);
     } catch (error) {
       this.errorHandler.handle(error, { action: 'add player', metadata: { id: input.id } });
     }
-  }
-
-  private clonePlayer(player: Player): Player {
-    return {
-      ...player,
-      country: { ...player.country },
-      data: { ...player.data, last: [...player.data.last] }
-    };
   }
 
   private round(value: number, decimals: number): number {
