@@ -13,8 +13,8 @@ env:
   ECR_REPOSITORY: laterlier
   CONTAINER_NAME: latelier
   EC2_INSTANCE_ID: i-004b03e1540f303d3
-  TAG: "${1:-latest}"
   ACCOUNT_ID: 612622081166
+  IMAGE_TAG: ${{ github.sha }}
 
 jobs:
   deploy:
@@ -42,8 +42,6 @@ jobs:
 
       # 3) Build + tag + push
       - name: Build, tag, and push image to ECR
-        env:
-          IMAGE_TAG: ${{ github.sha }}
         run: |
           ECR_REGISTRY="612622081166.dkr.ecr.eu-west-3.amazonaws.com"
           IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
@@ -54,19 +52,17 @@ jobs:
 
       # 4) Deploy on EC2 via SSM Run Command (no SSH keys)
       - name: Deploy on EC2 (SSM Run Command)
-        env:
-          IMAGE_TAG: ${{ github.sha }}
         run: |
           aws ssm send-command \
             --instance-ids "$EC2_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --comment "Deploy ${ECR_REPOSITORY}:${TAG}" \
+            --comment "Deploy ${ECR_REPOSITORY}:${IMAGE_TAG}" \
             --parameters commands="[
               \"aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com\",
-              \"docker pull ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${TAG}\",
+              \"docker pull ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}\",
               \"docker stop my-app || true\",
               \"docker rm my-app || true\",
-              \"docker run -d --name my-app --restart unless-stopped -p 80:3000 ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${TAG}\"
+              \"docker run -d --name my-app --restart unless-stopped -p 80:3000 ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}\"
             ]"
 
       # Run Command via AWS CLI :contentReference[oaicite:11]{index=11}
