@@ -14,6 +14,7 @@ env:
   CONTAINER_NAME: latelier
   EC2_INSTANCE_ID: i-004b03e1540f303d3
   TAG: "${1:-latest}"
+  ACCOUNT_ID: 612622081166
 
 jobs:
   deploy:
