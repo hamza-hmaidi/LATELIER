@@ -13,6 +13,7 @@ env:
   ECR_REPOSITORY: laterlier
   CONTAINER_NAME: latelier
   EC2_INSTANCE_ID: i-004b03e1540f303d3
+  TAG: "${1:-latest}"
 
 jobs:
   deploy:
@@ -58,13 +59,13 @@ jobs:
           aws ssm send-command \
             --instance-ids "$EC2_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --comment "Deploy ${REPO}:${TAG}" \
+            --comment "Deploy ${ECR_REPOSITORY}:${TAG}" \
             --parameters commands="[
               \"aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com\",
-              \"docker pull ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:${TAG}\",
+              \"docker pull ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${TAG}\",
               \"docker stop my-app || true\",
               \"docker rm my-app || true\",
-              \"docker run -d --name my-app --restart unless-stopped -p 80:3000 ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:${TAG}\"
+              \"docker run -d --name my-app --restart unless-stopped -p 80:3000 ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${TAG}\"
             ]"
 
       # Run Command via AWS CLI :contentReference[oaicite:11]{index=11}
