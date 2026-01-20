@@ -26,7 +26,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::612622081166:role/ec2ReadECR
+          role-to-assume: arn:aws:iam::612622081166:role/GitHubActionsDeployRole
           aws-region: ${{ env.AWS_REGION }}
       # This is the recommended action + OIDC flow :contentReference[oaicite:8]{index=8}
 
@@ -56,8 +56,15 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           aws ssm send-command \
-            --instance-ids "${EC2_INSTANCE_ID}" \
+            --instance-ids "$EC2_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --comment "Deploy ${ECR_REPOSITORY}:${IMAGE_TAG}" \
-            --parameters commands="sudo /opt/app/deploy.sh ${IMAGE_TAG}"
+            --comment "Deploy ${REPO}:${TAG}" \
+            --parameters commands="[
+              \"aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com\",
+              \"docker pull ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:${TAG}\",
+              \"docker stop my-app || true\",
+              \"docker rm my-app || true\",
+              \"docker run -d --name my-app --restart unless-stopped -p 80:3000 ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO}:${TAG}\"
+            ]"
+
       # Run Command via AWS CLI :contentReference[oaicite:11]{index=11}
