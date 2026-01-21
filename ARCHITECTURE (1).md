@@ -19,6 +19,7 @@ NestJS précise l’ordre d’exécution des middlewares et la place des pipes e
 
 Dans le projet :
 - `RequestIdMiddleware` est appliqué globalement (`forRoutes('*')`) dans `AppModule`.
+- `RequestLoggerMiddleware` trace chaque requête (status, durée, taille, requestId).
 - Un `ValidationPipe` global est installé au bootstrap (`main.ts`) avec `transform: true`.
 - Un `ResponseEnvelopeInterceptor` global enveloppe les réponses succès.
 - Un `AllExceptionsFilter` global uniformise toutes les réponses d’erreur.
@@ -54,6 +55,15 @@ Le projet ajoute un service `RequestContextService` basé sur `AsyncLocalStorage
 Bénéfices :
 - améliore la **lisibilité** du code métier
 - facilite l’**enrichissement systématique** des logs et erreurs avec `requestId`
+
+### 2.4 Journalisation : `RequestLoggerMiddleware`
+
+Le middleware de log :
+- écoute l’événement `finish` de la réponse
+- calcule la durée (ms), récupère le status et la taille de la réponse
+- inclut systématiquement `requestId` dans la ligne de log
+
+Cela fournit une **observabilité minimale** (latence + statut + corrélation).
 
 ---
 
@@ -132,7 +142,7 @@ Dans `CreatePlayerDto`, les règles couvrent :
 - règles numériques (`rank`, `weight`, `height`, `age`)
 - format des données récentes (`last` = tableau non vide, valeurs ∈ {0,1})
 
-Remarque : j'ai laissé `whitelist` et `forbidNonWhitelisted` commentés. Activer ces options est une amélioration facile si l’objectif est de rejeter strictement les champs inattendus (sécurité/contrat plus strict). Le mécanisme est documenté dans NestJS Validation. 
+Remarque : `whitelist` et `forbidNonWhitelisted` sont activés pour rejeter les champs inattendus (contrat plus strict et surface d’attaque réduite).
 
 ---
 
@@ -180,17 +190,16 @@ Bénéfices :
 
 ## 8) Choix orientés “production readiness”
 
-### 5.1 Observabilité minimale
+### 8.1 Observabilité minimale
 - `X-Request-ID` renvoyé au client
 - `requestId` propagé en contexte (AsyncLocalStorage)
+- logs HTTP systématiques (status, durée, taille)
 - erreurs 500 renvoyées avec `errorId` (support)
 
 Le standard W3C Trace Context existe si l’application évolue vers un environnement microservices / tracing distribué.
 
-### 5.2 Réponses d’erreur cohérentes
+### 8.2 Réponses d’erreur cohérentes
 - format unique grâce au filter global
 - séparation “client safe” / “log détaillé”
 
 ---
-
-```

@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { CommonModule } from './common/common.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
+import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
 import { PlayersModule } from './modules/players/players.module';
 
 @Module({
@@ -8,6 +9,6 @@ import { PlayersModule } from './modules/players/players.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(RequestIdMiddleware).forRoutes('*');
+    consumer.apply(RequestIdMiddleware, RequestLoggerMiddleware).forRoutes('*');
   }
 }
