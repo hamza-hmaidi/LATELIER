@@ -4,24 +4,45 @@ API simple pour retourner des joueurs de tennis et des statistiques.
 
 ## Prerequis
 - Node.js 18+
-- npm
+- npm ou yarn
 
-## Installation
+## Installation (npm)
 ```bash
 npm install
 ```
 
-## Lancer en dev
+## Installation (yarn)
+```bash
+yarn install
+```
+
+## Lancer en dev (npm)
 ```bash
 npm run start:dev
 ```
 L'API tourne sur `http://localhost:3000`.
 
+## Lancer en dev (yarn)
+```bash
+yarn start:dev
+```
+
+## Lancer avec Docker
+```bash
+docker build -t latelier-tennis-api .
+docker run --rm -p 3000:3000 latelier-tennis-api
+```
+
 ## Endpoints
-- `GET /players` : liste des joueurs du meilleur au moins bon (tri par `data.rank`).
+- `GET /players` : liste des joueurs du meilleur au moins bon (tri par `data.rank`), avec pagination et filtre `sex`.
 - `GET /players/:id` : details d'un joueur.
 - `GET /players/statistics` : statistiques globales.
 - `POST /players` : ajout d'un joueur.
+
+Exemple GET avec pagination + filtre:
+```bash
+curl "http://localhost:3000/players?page=1&limit=10&sex=F"
+```
 
 Exemple POST:
 ```bash
@@ -52,6 +73,10 @@ curl -X POST http://localhost:3000/players \
 ## Tests
 ```bash
 npm test
+```
+
+```bash
+yarn test
 ```
 
 ## Notes
