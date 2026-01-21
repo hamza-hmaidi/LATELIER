@@ -1,6 +1,6 @@
 # Architecture & choix techniques (L'Atelier – Tennis API)
 
-Ce document décrit l’architecture de l’application et justifie les choix liés à la **traçabilité des requêtes** (Request ID), la **gestion centralisée des erreurs** (ErrorHandlerService + AllExceptionsFilter) et la **validation des entrées** (DTO + ValidationPipe).
+Ce document décrit l’architecture de l’application et justifie les choix liés à la **traçabilité des requêtes** (Request ID), la **gestion centralisée des erreurs** (ErrorHandlerService + AllExceptionsFilter), la **validation des entrées** (DTO + ValidationPipe), l’**enveloppe de réponse** (ResponseEnvelopeInterceptor), la **pagination réutilisable**, et l’usage d’un **repository** (PlayersRepository).
 
 ---
 
@@ -12,13 +12,15 @@ L’application suit le pipeline NestJS :
 2. **Pipes** (transformation + validation des entrées)
 3. **Controllers** (routing HTTP)
 4. **Services** (logique métier)
-5. En cas d’exception : **Exception Filters** (formatage de la réponse d’erreur)
+5. **Interceptors** (enveloppe de réponse)
+6. En cas d’exception : **Exception Filters** (formatage de la réponse d’erreur)
 
 NestJS précise l’ordre d’exécution des middlewares et la place des pipes et filters dans le cycle de vie de requête. 
 
 Dans le projet :
 - `RequestIdMiddleware` est appliqué globalement (`forRoutes('*')`) dans `AppModule`.
 - Un `ValidationPipe` global est installé au bootstrap (`main.ts`) avec `transform: true`.
+- Un `ResponseEnvelopeInterceptor` global enveloppe les réponses succès.
 - Un `AllExceptionsFilter` global uniformise toutes les réponses d’erreur.
 
 ---
@@ -134,7 +136,49 @@ Remarque : j'ai laissé `whitelist` et `forbidNonWhitelisted` commentés. Active
 
 ---
 
-## 5) Choix orientés “production readiness”
+## 5) Envelope de réponse : `ResponseEnvelopeInterceptor`
+
+Objectif : fournir un **contrat de réponse uniforme** pour les endpoints, en enveloppant les retours sous la forme :
+
+```json
+{
+  "data": ...,
+  "meta": ...
+}
+```
+
+Le `ResponseEnvelopeInterceptor` :
+- n’enveloppe pas une réponse déjà au format `{ data, meta }` (ex: listes paginées)
+- enveloppe tout le reste en `{ data: <payload>, meta: null }`
+
+Cela standardise l’interface côté client, tout en laissant les réponses paginées gérer leur `meta`.
+
+---
+
+## 6) Pagination réutilisable
+
+La pagination est conçue comme un **outil transversal** :
+- `PaginationQueryDto` (DTO global) pour valider `page`/`limit`
+- `paginate<T>()` pour découper une collection et générer un `meta` uniforme
+- types partagés (`Paginated<T>`, `PaginationMeta`)
+
+Cette approche facilite la réutilisation pour d’autres endpoints et garantit une réponse cohérente entre les ressources.
+
+---
+
+## 7) Repository : `PlayersRepository`
+
+Le repository isole l’accès aux données de la logique métier :
+- `PlayersRepository` est une interface (contrat)
+- `InMemoryPlayersRepository` est l’implémentation actuelle (JSON en mémoire)
+
+Bénéfices :
+- l’API métier (`PlayersService`) reste indépendante de la source de données
+- un futur repository DB peut remplacer l’in-memory sans changer la logique
+
+---
+
+## 8) Choix orientés “production readiness”
 
 ### 5.1 Observabilité minimale
 - `X-Request-ID` renvoyé au client

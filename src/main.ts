@@ -6,6 +6,7 @@ import { AppModule } from './app.module';
 import { AppException } from './common/errors/app.exception';
 import { ErrorCodes } from './common/errors/error-catalog';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
 
 type ValidationDetail = {
   field: string;
@@ -50,6 +51,7 @@ async function bootstrap() {
     })
   );
   app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalInterceptors(new ResponseEnvelopeInterceptor());
   await app.listen(process.env.PORT || 3000);
 }
 
