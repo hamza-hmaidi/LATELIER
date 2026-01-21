@@ -39,12 +39,23 @@ docker run --rm -p 3000:3000 latelier-tennis-api
 - `GET /players/statistics` : statistiques globales.
 - `POST /players` : ajout d'un joueur.
 
-Exemple GET avec pagination + filtre:
+## Tester l'API (exemples curl)
+Liste paginée + filtre:
 ```bash
 curl "http://localhost:3000/players?page=1&limit=10&sex=F"
 ```
 
-Exemple POST:
+Détails d'un joueur:
+```bash
+curl "http://localhost:3000/players/52"
+```
+
+Statistiques:
+```bash
+curl "http://localhost:3000/players/statistics"
+```
+
+Ajout d'un joueur:
 ```bash
 curl -X POST http://localhost:3000/players \
   -H 'Content-Type: application/json' \
@@ -81,4 +92,3 @@ yarn test
 
 ## Notes
 - Les donnees sont en memoire. Un redemarrage reinitialise la liste.
-- L'IMC est calcule a partir de `weight` (grammes) et `height` (cm).
