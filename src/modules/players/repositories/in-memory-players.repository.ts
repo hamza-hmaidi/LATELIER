@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import playersData from '@data/players.json';
+import { AppException } from '../../../common/errors/app.exception';
+import { ErrorCodes } from '../../../common/errors/error-catalog';
 import { Player } from '../types/players.types';
 import { PlayersRepository } from './players.repository';
 
@@ -12,8 +14,12 @@ export class InMemoryPlayersRepository implements PlayersRepository {
   private readonly players: Player[];
 
   constructor() {
-    const initial = (playersData as PlayersJson).players || [];
-    this.players = initial.map((player) => this.clonePlayer(player));
+    const payload = playersData as PlayersJson;
+    if (!payload || !Array.isArray(payload.players)) {
+      throw new AppException(ErrorCodes.DATA_SOURCE_UNAVAILABLE);
+    }
+
+    this.players = payload.players.map((player) => this.clonePlayer(player));
   }
 
   list(): Player[] {

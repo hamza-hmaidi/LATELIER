@@ -28,7 +28,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message: this.extractMessage(responsePayload)
     };
 
-    const errorId = this.extractErrorId(responsePayload);
+    const errorCode = this.extractField(responsePayload, 'errorCode');
+    if (errorCode) {
+      payload.errorCode = errorCode;
+    }
+
+    const details = this.extractField(responsePayload, 'details');
+    if (details) {
+      payload.details = details;
+    }
+
+    const errorId = this.extractField(responsePayload, 'errorId');
     if (errorId) {
       payload.errorId = errorId;
     }
@@ -52,9 +62,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
     return payload as object;
   }
 
-  private extractErrorId(payload: unknown): string | undefined {
-    if (payload && typeof payload === 'object' && 'errorId' in payload) {
-      return String((payload as { errorId: unknown }).errorId);
+  private extractField(payload: unknown, field: string): string | object | undefined {
+    if (payload && typeof payload === 'object' && field in payload) {
+      return (payload as Record<string, string | object>)[field];
     }
 
     return undefined;

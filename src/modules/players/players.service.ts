@@ -1,4 +1,6 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { AppException } from '../../common/errors/app.exception';
+import { ErrorCodes } from '../../common/errors/error-catalog';
 import { ErrorHandlerService } from '../../common/errors/error-handler.service';
 import { CreatePlayerDto } from './models/dto/player.dto';
 import { BmiService } from './metric/bmi.service';
@@ -13,8 +15,7 @@ export class PlayersService {
     private readonly heightService: HeightService,
     private readonly playersRepository: PlayersRepository,
     private readonly errorHandler: ErrorHandlerService
-  ) {
-  }
+  ) {}
 
   listSorted(): Player[] {
     try {
@@ -29,7 +30,7 @@ export class PlayersService {
     try {
       const player = this.playersRepository.findById(id);
       if (!player) {
-        throw new NotFoundException(`Player with id ${id} not found`);
+        throw new AppException(ErrorCodes.PLAYER_NOT_FOUND, { id });
       }
       return player;
     } catch (error) {
@@ -92,7 +93,10 @@ export class PlayersService {
   addPlayer(input: CreatePlayerDto): Player {
     try {
       if (this.playersRepository.findById(input.id)) {
-        throw new BadRequestException('Player id already exists');
+        throw new AppException(ErrorCodes.INVALID_PLAYER_PAYLOAD, {
+          reason: 'duplicate id',
+          id: input.id
+        });
       }
 
       return this.playersRepository.add(input as Player);

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { RequestContextService } from '../request-context/request-context.service';
+import { AppException } from './app.exception';
 
 export type ErrorContext = {
   action: string;
@@ -26,6 +27,16 @@ export class ErrorHandlerService {
       ...context,
       requestId: context.requestId ?? this.requestContext.getRequestId()
     };
+
+    if (error instanceof AppException) {
+      const status = error.getStatus();
+      if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+        this.logError(error, enrichedContext, errorId, status);
+      } else {
+        this.logWarn(error, enrichedContext, errorId, status);
+      }
+      throw error;
+    }
 
     if (error instanceof HttpException) {
       const status = error.getStatus();
