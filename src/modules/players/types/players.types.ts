@@ -1,3 +1,5 @@
+import { Paginated } from '@common/pagination/types';
+
 export type Country = {
   picture: string;
   code: string;
@@ -31,3 +33,5 @@ export type PlayersStats = {
   averageBmi: number;
   medianHeight: number;
 };
+
+export type PlayersListResponse = Paginated<Player>;

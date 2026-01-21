@@ -1,15 +1,16 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
 import { PlayersService } from './players.service';
-import { Player, PlayersStats } from './types/players.types';
 import { CreatePlayerDto } from './models/dto/player.dto';
+import { ListPlayersQueryDto } from './models/dto/list-players.query';
+import { Player, PlayersListResponse, PlayersStats } from './types/players.types';
 
 @Controller('players')
 export class PlayersController {
   constructor(private readonly playersService: PlayersService) {}
 
   @Get()
-  listPlayers(): Player[] {
-    return this.playersService.listSorted();
+  listPlayers(@Query() query: ListPlayersQueryDto): PlayersListResponse {
+    return this.playersService.listPlayers(query);
   }
 
   @Get('statistics')

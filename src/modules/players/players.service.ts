@@ -2,11 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { AppException } from '../../common/errors/app.exception';
 import { ErrorCodes } from '../../common/errors/error-catalog';
 import { ErrorHandlerService } from '../../common/errors/error-handler.service';
+import { paginate } from '../../common/pagination/paginate';
 import { CreatePlayerDto } from './models/dto/player.dto';
+import { ListPlayersQueryDto } from './models/dto/list-players.query';
 import { BmiService } from './metric/bmi.service';
 import { HeightService } from './metric/height.service';
 import { PlayersRepository } from './repositories/players.repository';
-import { Player, PlayersStats } from './types/players.types';
+import { Player, PlayersListResponse, PlayersStats } from './types/players.types';
 
 @Injectable()
 export class PlayersService {
@@ -17,10 +19,20 @@ export class PlayersService {
     private readonly errorHandler: ErrorHandlerService
   ) {}
 
-  listSorted(): Player[] {
+  listPlayers(query: ListPlayersQueryDto = {}): PlayersListResponse {
     try {
       const players = this.playersRepository.list();
-      return players.sort((a, b) => a.data.rank - b.data.rank);
+      const sex = query.sex?.toUpperCase() as 'M' | 'F' | undefined;
+
+      const filtered = players.filter((player) => {
+        if (sex && player.sex !== sex) {
+          return false;
+        }
+        return true;
+      });
+
+      const sorted = filtered.sort((a, b) => a.data.rank - b.data.rank);
+      return paginate(sorted, query.page, query.limit);
     } catch (error) {
       this.errorHandler.handle(error, { action: 'list players' });
     }

@@ -19,10 +19,12 @@ describe('PlayersService', () => {
   });
 
   it('sorts players from best to worst', () => {
-    const players = service.listSorted();
+    const result = service.listPlayers();
+    const players = result.data;
     for (let index = 1; index < players.length; index += 1) {
       expect(players[index - 1].data.rank).toBeLessThanOrEqual(players[index].data.rank);
     }
+    expect(result.meta.total).toBe(players.length);
   });
 
   it('returns a player by id', () => {
