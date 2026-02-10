@@ -4,6 +4,7 @@ module.exports = {
   testMatch: ['**/*.spec.ts'],
   moduleFileExtensions: ['ts', 'js', 'json'],
   moduleNameMapper: {
-    '^@data/(.*)$': '<rootDir>/data/$1'
+    '^@data/(.*)$': '<rootDir>/data/$1',
+    '^@common/(.*)$': '<rootDir>/src/common/$1'
   }
 };
