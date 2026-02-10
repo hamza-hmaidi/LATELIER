@@ -1,7 +1,9 @@
 import { ErrorHandlerService } from '../../common/errors/error-handler.service';
 import { RequestContextService } from '../../common/request-context/request-context.service';
 import { BmiService } from './metric/bmi.service';
+import { CountryWinRatioService } from './metric/country-win-ratio.service';
 import { HeightService } from './metric/height.service';
+import { PlayersStatisticsService } from './metric/players-statistics.service';
 import { PlayersService } from './players.service';
 import { InMemoryPlayersRepository } from './repositories/in-memory-players.repository';
 import { Player } from './types/players.types';
@@ -10,10 +12,14 @@ describe('PlayersService', () => {
   let service: PlayersService;
 
   beforeEach(() => {
-    service = new PlayersService(
+    const statisticsService = new PlayersStatisticsService(
       new BmiService(),
       new HeightService(),
+      new CountryWinRatioService()
+    );
+    service = new PlayersService(
       new InMemoryPlayersRepository(),
+      statisticsService,
       new ErrorHandlerService(new RequestContextService())
     );
   });

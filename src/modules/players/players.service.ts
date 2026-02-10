@@ -4,17 +4,15 @@ import { ErrorCodes } from '../../common/errors/error-catalog';
 import { ErrorHandlerService } from '../../common/errors/error-handler.service';
 import { CreatePlayerDto } from './models/dto/player.dto';
 import { ListPlayersQueryDto } from './models/dto/list-players.query';
-import { BmiService } from './metric/bmi.service';
-import { HeightService } from './metric/height.service';
+import { PlayersStatisticsService } from './metric/players-statistics.service';
 import { PlayersRepository } from './repositories/players.repository';
 import { Player, PlayersListResponse, PlayersStats } from './types/players.types';
 
 @Injectable()
 export class PlayersService {
   constructor(
-    private readonly bmiService: BmiService,
-    private readonly heightService: HeightService,
     private readonly playersRepository: PlayersRepository,
+    private readonly statisticsService: PlayersStatisticsService,
     private readonly errorHandler: ErrorHandlerService
   ) {}
 
@@ -41,50 +39,7 @@ export class PlayersService {
   getStatistics(): PlayersStats {
     try {
       const players = this.playersRepository.list();
-      if (players.length === 0) {
-        return {
-          topCountryByWinRatio: { code: '', ratio: 0 },
-          averageBmi: 0,
-          medianHeight: 0
-        };
-      }
-
-      const countryStats = new Map<string, { wins: number; matches: number }>();
-
-      for (const player of players) {
-        const wins = player.data.last.reduce(
-          (sum, value) => sum + (value === 1 ? 1 : 0),
-          0
-        );
-        const matches = player.data.last.length;
-
-        const current = countryStats.get(player.country.code) || { wins: 0, matches: 0 };
-        current.wins += wins;
-        current.matches += matches;
-        countryStats.set(player.country.code, current);
-      }
-
-      let topCountryCode = '';
-      let topRatio = -1;
-      for (const [code, stats] of countryStats.entries()) {
-        const ratio = stats.matches === 0 ? 0 : stats.wins / stats.matches;
-        if (ratio > topRatio) {
-          topRatio = ratio;
-          topCountryCode = code;
-        }
-      }
-
-      const averageBmi = this.bmiService.calculateAverage(players);
-      const medianHeight = this.heightService.calculateMedian(players);
-
-      return {
-        topCountryByWinRatio: {
-          code: topCountryCode,
-          ratio: this.round(topRatio, 3)
-        },
-        averageBmi: this.round(averageBmi, 2),
-        medianHeight
-      };
+      return this.statisticsService.compute(players);
     } catch (error) {
       this.errorHandler.handle(error, { action: 'compute statistics' });
     }
@@ -105,7 +60,4 @@ export class PlayersService {
     }
   }
 
-  private round(value: number, decimals: number): number {
-    return Number(value.toFixed(decimals));
-  }
 }
