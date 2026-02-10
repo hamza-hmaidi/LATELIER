@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { roundTo } from '@common/utils/number.utils';
 import { Player, PlayersStats } from '../types/players.types';
 import { BmiService } from './bmi.service';
 import { CountryWinRatioService } from './country-win-ratio.service';
@@ -28,14 +29,10 @@ export class PlayersStatisticsService {
     return {
       topCountryByWinRatio: {
         code: topCountry.code,
-        ratio: this.round(topCountry.ratio, 3)
+        ratio: roundTo(topCountry.ratio, 3)
       },
-      averageBmi: this.round(averageBmi, 2),
+      averageBmi: roundTo(averageBmi, 2),
       medianHeight
     };
-  }
-
-  private round(value: number, decimals: number): number {
-    return Number(value.toFixed(decimals));
   }
 }
