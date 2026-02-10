@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
 import { PlayersService } from './players.service';
 import { CreatePlayerDto } from './models/dto/player.dto';
 import { ListPlayersQueryDto } from './models/dto/list-players.query';

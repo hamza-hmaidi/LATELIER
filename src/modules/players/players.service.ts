@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { AppException } from '../../common/errors/app.exception';
 import { ErrorCodes } from '../../common/errors/error-catalog';
 import { ErrorHandlerService } from '../../common/errors/error-handler.service';
-import { paginate } from '../../common/pagination/paginate';
 import { CreatePlayerDto } from './models/dto/player.dto';
 import { ListPlayersQueryDto } from './models/dto/list-players.query';
 import { BmiService } from './metric/bmi.service';
@@ -21,18 +20,7 @@ export class PlayersService {
 
   listPlayers(query: ListPlayersQueryDto = {}): PlayersListResponse {
     try {
-      const players = this.playersRepository.list();
-      const sex = query.sex?.toUpperCase() as 'M' | 'F' | undefined;
-
-      const filtered = players.filter((player) => {
-        if (sex && player.sex !== sex) {
-          return false;
-        }
-        return true;
-      });
-
-      const sorted = filtered.sort((a, b) => a.data.rank - b.data.rank);
-      return paginate(sorted, query.page, query.limit);
+      return this.playersRepository.listPaginated(query);
     } catch (error) {
       this.errorHandler.handle(error, { action: 'list players' });
     }

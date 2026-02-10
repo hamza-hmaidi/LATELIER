@@ -2,7 +2,9 @@ import { Injectable } from '@nestjs/common';
 import playersData from '@data/players.json';
 import { AppException } from '../../../common/errors/app.exception';
 import { ErrorCodes } from '../../../common/errors/error-catalog';
-import { Player } from '../types/players.types';
+import { paginate } from '@common/pagination/paginate';
+import { Paginated } from '@common/pagination/types';
+import { ListPlayersParams, Player } from '../types/players.types';
 import { PlayersRepository } from './players.repository';
 
 type PlayersJson = {
@@ -24,6 +26,21 @@ export class InMemoryPlayersRepository implements PlayersRepository {
 
   list(): Player[] {
     return this.players.map((player) => this.clonePlayer(player));
+  }
+
+  listPaginated(query: ListPlayersParams = {}): Paginated<Player> {
+    const sex = query.sex?.toUpperCase() as 'M' | 'F' | undefined;
+    const players = this.players.map((player) => this.clonePlayer(player));
+
+    const filtered = players.filter((player) => {
+      if (sex && player.sex !== sex) {
+        return false;
+      }
+      return true;
+    });
+
+    const sorted = filtered.sort((a, b) => a.data.rank - b.data.rank);
+    return paginate(sorted, query.page, query.limit);
   }
 
   findById(id: number): Player | null {

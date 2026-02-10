@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
 
 permissions:
-  id-token: write   # required for OIDC with AWS :contentReference[oaicite:7]{index=7}
+  id-token: write   # required for OIDC with AWS
   contents: read
 
 env:

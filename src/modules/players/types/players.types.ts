@@ -35,3 +35,9 @@ export type PlayersStats = {
 };
 
 export type PlayersListResponse = Paginated<Player>;
+
+export type ListPlayersParams = {
+  page?: number;
+  limit?: number;
+  sex?: 'M' | 'F';
+};
