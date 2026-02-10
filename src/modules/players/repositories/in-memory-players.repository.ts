@@ -49,6 +49,13 @@ export class InMemoryPlayersRepository implements PlayersRepository {
   }
 
   add(player: Player): Player {
+    if (this.players.some((item) => item.id === player.id)) {
+      throw new AppException(ErrorCodes.INVALID_PLAYER_PAYLOAD, {
+        reason: 'duplicate id',
+        id: player.id
+      });
+    }
+
     const newPlayer = this.clonePlayer(player);
     this.players.push(newPlayer);
     return this.clonePlayer(newPlayer);

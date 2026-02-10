@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { AppException } from '../../common/errors/app.exception';
-import { ErrorCodes } from '../../common/errors/error-catalog';
 import { ErrorHandlerService } from '../../common/errors/error-handler.service';
 import { CreatePlayerDto } from './models/dto/player.dto';
 import { ListPlayersQueryDto } from './models/dto/list-players.query';
@@ -47,13 +45,6 @@ export class PlayersService {
 
   addPlayer(input: CreatePlayerDto): Player {
     try {
-      if (this.playersRepository.findById(input.id)) {
-        throw new AppException(ErrorCodes.INVALID_PLAYER_PAYLOAD, {
-          reason: 'duplicate id',
-          id: input.id
-        });
-      }
-
       return this.playersRepository.add(input as Player);
     } catch (error) {
       this.errorHandler.handle(error, { action: 'add player', metadata: { id: input.id } });
