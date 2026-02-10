@@ -33,6 +33,16 @@ describe('PlayersService', () => {
     expect(result.meta.total).toBe(players.length);
   });
 
+  it('supports custom sorting', () => {
+    const result = service.listPlayers({ sortBy: 'points', order: 'desc' });
+    const players = result.data;
+    for (let index = 1; index < players.length; index += 1) {
+      expect(players[index - 1].data.points).toBeGreaterThanOrEqual(
+        players[index].data.points
+      );
+    }
+  });
+
   it('returns a player by id', () => {
     const player = service.findById(52);
     expect(player.firstname).toBe('Novak');

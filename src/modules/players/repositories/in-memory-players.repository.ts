@@ -32,6 +32,10 @@ export class InMemoryPlayersRepository implements PlayersRepository {
     const sex = query.sex?.toUpperCase() as 'M' | 'F' | undefined;
     const players = this.players.map((player) => this.clonePlayer(player));
 
+    const sortBy = query.sortBy ?? 'rank';
+    const order = query.order ?? 'asc';
+    const direction = order === 'desc' ? -1 : 1;
+
     const filtered = players.filter((player) => {
       if (sex && player.sex !== sex) {
         return false;
@@ -39,7 +43,9 @@ export class InMemoryPlayersRepository implements PlayersRepository {
       return true;
     });
 
-    const sorted = filtered.sort((a, b) => a.data.rank - b.data.rank);
+    const sorted = filtered.sort(
+      (a, b) => (a.data[sortBy] - b.data[sortBy]) * direction
+    );
     return paginate(sorted, query.page, query.limit);
   }
 

@@ -36,8 +36,13 @@ export type PlayersStats = {
 
 export type PlayersListResponse = Paginated<Player>;
 
+export type PlayerSortField = 'rank' | 'points' | 'age' | 'height' | 'weight';
+export type SortOrder = 'asc' | 'desc';
+
 export type ListPlayersParams = {
   page?: number;
   limit?: number;
   sex?: 'M' | 'F';
+  sortBy?: PlayerSortField;
+  order?: SortOrder;
 };
